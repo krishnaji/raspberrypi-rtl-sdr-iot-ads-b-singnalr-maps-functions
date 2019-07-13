@@ -1,0 +1,21 @@
+{
+  "bindings": [
+    {
+      "type": "eventHubTrigger",
+      "name": "IoTHubMessages",
+      "direction": "in",
+      "eventHubName": "samples-workitems",
+      "connection": "IOTHUB",
+      "cardinality": "many",
+      "consumerGroup": "$Default"
+    },
+    
+    {
+      "type": "signalR",
+      "name": "signalRMessages",
+      "hubName": "iot",
+      "direction": "out"
+    }
+  ],
+  "disabled": false
+}

@@ -1,0 +1,17 @@
+FROM resin/raspberrypi3-debian:stretch
+
+RUN apt-get update && \
+        apt-get install -y cmake build-essential libusb-1.0-0-dev  git pkg-configRUN git clone git://git.osmocom.org/rtl-sdr.git && \
+        cd rtl-sdr && \
+        mkdir build && \
+        cd build && \
+        cmake ../ -DINSTALL_UDEV_RULES=ON -DDETACH_KERNEL_DRIVER=ON && \
+        make && \
+        make install && \
+        ldconfig
+
+RUN git clone git://github.com/MalcolmRobb/dump1090.git && \    cd dump1090 && \
+    make
+WORKDIR /dump1090
+
+CMD ["./dump1090","--net"]

@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Realtime Flights on Azure Maps</title>
+
+    <meta charset="utf-8" />
+    <meta http-equiv="x-ua-compatible" content="IE=Edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <!-- Add references to the Azure Maps Map control JavaScript and CSS files. -->
+    <link rel="stylesheet" href="https://atlas.microsoft.com/sdk/javascript/mapcontrol/2/atlas.min.css" type="text/css" />
+    <script src="https://atlas.microsoft.com/sdk/javascript/mapcontrol/2/atlas.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@aspnet/signalr@1.0.3/dist/browser/signalr.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios@0.18.0/dist/axios.min.js"></script>
+
+    <script type='text/javascript'>
+    // https://github.com/Azure-Samples/signalr-service-quickstart-serverless-chat/blob/master/docs/demo/chat/index.html
+
+const apiBaseUrl = 'http://localhost:7071';
+    function GetConnectionInfo() {
+    return axios.get('http://localhost:7071/api/negotiate')
+        .then(function (response) {
+            return response.data
+        }).catch(console.error)
+}
+GetConnectionInfo().then(info  =>{
+        info.accessToken = info.accessToken || info.accessKey;
+        info.url = info.url || info.endpoint;
+        const options = {
+            accessTokenFactory: () => info.accessToken
+        };
+        const connection = new signalR.HubConnectionBuilder().withUrl(info.url,options).configureLogging(signalR.LogLevel.Information).build();
+        connection.on('newMessage', newMessage);
+        connection.onclose(() => console.log('disconnected'));
+        console.log('connecting...');
+        connection.start().then(() => console.log('connected!')).catch(console.error);
+        
+    });
+    //https://github.com/davetheunissen/Global-Azure-Bootcamp-2019-Workshop/blob/master/Web/index.html
+    let counter = 0;
+    let datasource;
+    let planes = [];
+    function newMessage(message) {
+        var newFlightPin = new atlas.Shape(new atlas.data.Point([message.lon, message.lat]), message.icao);
+        newFlightPin.addProperty('alt', message.alt);
+        newFlightPin.addProperty('icao', message.icao);
+        planes[message.icao] = newFlightPin;
+        datasource.setShapes(Object.values(planes));
+        console.log(message)
+    }
+
+    var map;
+    function GetMap() {
+            //Initialize a map instance.
+            map = new atlas.Map('myMap', {
+                center:  [-74.382270,40.882630],
+                style: 'night',
+                zoom: 8,
+                //Add your Azure Maps subscription key to the map SDK. Get an Azure Maps key at https://azure.com/maps
+                authOptions: {
+                    authType: 'subscriptionKey',
+                    subscriptionKey: 'QVzvHilV1tJjSFcWmsvf_me2Jn09O8PrQOLS47hJoko'
+                }
+            });
+            //Wait until the map resources are ready.
+            map.events.add('ready', function () {
+                map.imageSprite.add('plane', 'https://processing.blob.core.windows.net/public-assets/plane.png');
+                datasource = new atlas.source.DataSource();
+                map.sources.add(datasource);
+                //Create a symbol layer using the data source and add it to the map
+                map.layers.add(
+                    new atlas.layer.SymbolLayer(datasource, null, {
+                        iconOptions: {
+                        ignorePlacement: true,
+                        allowOverlap: true,
+                        image: 'plane',
+                        size:0.5
+            },
+                        textOptions: {
+                            textField: ['concat', ['to-string', ['get', 'icao']], ',', ['get', 'alt']],
+                            color: 'orange'
+                        }
+                        
+
+                    })
+                );  
+            });
+        }
+    </script>
+</head>
+<body onload="GetMap()">
+    <div id="myMap" style="position:relative;width:100%;min-width:290px;height:600px;"></div>
+</body>
+</html>
