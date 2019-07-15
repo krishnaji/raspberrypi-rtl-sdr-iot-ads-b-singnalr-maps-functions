@@ -28,5 +28,5 @@ Start the functions app with ``` func host start ```
 Get your maps subscription key from [here]() and update ```maps.html```. Open maps.html to watch the flights on maps.
 
 
-
+Also checkout this [project](https://github.com/davetheunissen/Global-Azure-Bootcamp-2019-Workshop) for detailed instructions around Maps, Functions and Cosmos DB.
 
